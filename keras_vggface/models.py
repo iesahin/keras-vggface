@@ -23,15 +23,19 @@ from keras.models import Model
 from keras import layers
 
 
-def VGG16(include_top=True, weights='vggface',
-          input_tensor=None, input_shape=None,
+def VGG16(include_top=True,
+          weights='vggface',
+          input_tensor=None,
+          input_shape=None,
           pooling=None,
-          classes=2622):
-    input_shape = _obtain_input_shape(input_shape,
-                                      default_size=224,
-                                      min_size=48,
-                                      data_format=K.image_data_format(),
-                                      require_flatten=include_top)
+          classes=2622,
+          trainable=True):
+    input_shape = _obtain_input_shape(
+        input_shape,
+        default_size=224,
+        min_size=48,
+        data_format=K.image_data_format(),
+        require_flatten=include_top)
 
     if input_tensor is None:
         img_input = Input(shape=input_shape)
@@ -41,44 +45,34 @@ def VGG16(include_top=True, weights='vggface',
         else:
             img_input = input_tensor
 
+    p = {'activation': 'relu', 'padding': 'same', 'trainable': trainable}
+
     # Block 1
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1')(
-        img_input)
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2')(x)
+    x = Conv2D(64, (3, 3), **p, name='conv1_1')(img_input)
+    x = Conv2D(64, (3, 3), **p, name='conv1_2')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
 
     # Block 2
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1')(
-        x)
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2')(
-        x)
+    x = Conv2D(128, (3, 3), **p, name='conv2_1')(x)
+    x = Conv2D(128, (3, 3), **p, name='conv2_2')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='pool2')(x)
 
     # Block 3
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1')(
-        x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_2')(
-        x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_3')(
-        x)
+    x = Conv2D(256, (3, 3), **p, name='conv3_1')(x)
+    x = Conv2D(256, (3, 3), **p, name='conv3_2')(x)
+    x = Conv2D(256, (3, 3), **p, name='conv3_3')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(x)
 
     # Block 4
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1')(
-        x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_2')(
-        x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3')(
-        x)
+    x = Conv2D(512, (3, 3), **p, name='conv4_1')(x)
+    x = Conv2D(512, (3, 3), **p, name='conv4_2')(x)
+    x = Conv2D(512, (3, 3), **p, name='conv4_3')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='pool4')(x)
 
     # Block 5
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_1')(
-        x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_2')(
-        x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_3')(
-        x)
+    x = Conv2D(512, (3, 3), **p, name='conv5_1')(x)
+    x = Conv2D(512, (3, 3), **p, name='conv5_2')(x)
+    x = Conv2D(512, (3, 3), **p, name='conv5_3')(x)
     x = MaxPooling2D((2, 2), strides=(2, 2), name='pool5')(x)
 
     if include_top:
@@ -106,14 +100,15 @@ def VGG16(include_top=True, weights='vggface',
     model = Model(inputs, x, name='vggface_vgg16')  # load weights
     if weights == 'vggface':
         if include_top:
-            weights_path = get_file('rcmalli_vggface_tf_vgg16.h5',
-                                    utils.
-                                    VGG16_WEIGHTS_PATH,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_vgg16.h5',
+                utils.VGG16_WEIGHTS_PATH,
+                cache_subdir=utils.VGGFACE_DIR)
         else:
-            weights_path = get_file('rcmalli_vggface_tf_notop_vgg16.h5',
-                                    utils.VGG16_WEIGHTS_PATH_NO_TOP,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_notop_vgg16.h5',
+                utils.VGG16_WEIGHTS_PATH_NO_TOP,
+                cache_subdir=utils.VGGFACE_DIR)
         model.load_weights(weights_path, by_name=True)
         if K.backend() == 'theano':
             layer_utils.convert_all_kernels_in_model(model)
@@ -123,8 +118,8 @@ def VGG16(include_top=True, weights='vggface',
                 maxpool = model.get_layer(name='pool5')
                 shape = maxpool.output_shape[1:]
                 dense = model.get_layer(name='fc6')
-                layer_utils.convert_dense_weights_data_format(dense, shape,
-                                                              'channels_first')
+                layer_utils.convert_dense_weights_data_format(
+                    dense, shape, 'channels_first')
 
             if K.backend() == 'tensorflow':
                 warnings.warn('You are using the TensorFlow backend, yet you '
@@ -138,8 +133,13 @@ def VGG16(include_top=True, weights='vggface',
     return model
 
 
-def resnet_identity_block(input_tensor, kernel_size, filters, stage, block,
-                          bias=False):
+def resnet_identity_block(input_tensor,
+                          kernel_size,
+                          filters,
+                          stage,
+                          block,
+                          bias=False,
+                          trainable=True):
     filters1, filters2, filters3 = filters
     if K.image_data_format() == 'channels_last':
         bn_axis = 3
@@ -150,17 +150,29 @@ def resnet_identity_block(input_tensor, kernel_size, filters, stage, block,
         block) + "_1x1_increase"
     conv3_name = 'conv' + str(stage) + "_" + str(block) + "_3x3"
 
-    x = Conv2D(filters1, (1, 1), use_bias=bias, name=conv1_reduce_name)(
-        input_tensor)
+    x = Conv2D(
+        filters1, (1, 1),
+        use_bias=bias,
+        name=conv1_reduce_name,
+        trainable=trainable)(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=conv1_reduce_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size, use_bias=bias,
-               padding='same', name=conv3_name)(x)
+    x = Conv2D(
+        filters2,
+        kernel_size,
+        use_bias=bias,
+        padding='same',
+        trainable=trainable,
+        name=conv3_name)(x)
     x = BatchNormalization(axis=bn_axis, name=conv3_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters3, (1, 1), use_bias=bias, name=conv1_increase_name)(x)
+    x = Conv2D(
+        filters3, (1, 1),
+        use_bias=bias,
+        trainable=trainable,
+        name=conv1_increase_name)(x)
     x = BatchNormalization(axis=bn_axis, name=conv1_increase_name + "/bn")(x)
 
     x = layers.add([x, input_tensor])
@@ -168,8 +180,14 @@ def resnet_identity_block(input_tensor, kernel_size, filters, stage, block,
     return x
 
 
-def resnet_conv_block(input_tensor, kernel_size, filters, stage, block,
-                      strides=(2, 2), bias=False):
+def resnet_conv_block(input_tensor,
+                      kernel_size,
+                      filters,
+                      stage,
+                      block,
+                      strides=(2, 2),
+                      bias=False,
+                      trainable=True):
     filters1, filters2, filters3 = filters
     if K.image_data_format() == 'channels_last':
         bn_axis = 3
@@ -181,39 +199,60 @@ def resnet_conv_block(input_tensor, kernel_size, filters, stage, block,
     conv1_proj_name = 'conv' + str(stage) + "_" + str(block) + "_1x1_proj"
     conv3_name = 'conv' + str(stage) + "_" + str(block) + "_3x3"
 
-    x = Conv2D(filters1, (1, 1), strides=strides, use_bias=bias,
-               name=conv1_reduce_name)(input_tensor)
+    x = Conv2D(
+        filters1, (1, 1),
+        strides=strides,
+        use_bias=bias,
+        trainable=trainable,
+        name=conv1_reduce_name)(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=conv1_reduce_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size, padding='same', use_bias=bias,
-               name=conv3_name)(x)
+    x = Conv2D(
+        filters2,
+        kernel_size,
+        padding='same',
+        use_bias=bias,
+        trainable=trainable,
+        name=conv3_name)(x)
     x = BatchNormalization(axis=bn_axis, name=conv3_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters3, (1, 1), name=conv1_increase_name, use_bias=bias)(x)
+    x = Conv2D(
+        filters3, (1, 1),
+        name=conv1_increase_name,
+        use_bias=bias,
+        trainable=trainable)(x)
     x = BatchNormalization(axis=bn_axis, name=conv1_increase_name + "/bn")(x)
 
-    shortcut = Conv2D(filters3, (1, 1), strides=strides, use_bias=bias,
-                      name=conv1_proj_name)(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis, name=conv1_proj_name + "/bn")(
-        shortcut)
+    shortcut = Conv2D(
+        filters3, (1, 1),
+        strides=strides,
+        use_bias=bias,
+        trainable=trainable,
+        name=conv1_proj_name)(input_tensor)
+    shortcut = BatchNormalization(
+        axis=bn_axis, name=conv1_proj_name + "/bn")(shortcut)
 
     x = layers.add([x, shortcut])
     x = Activation('relu')(x)
     return x
 
 
-def RESNET50(include_top=True, weights='vggface',
-             input_tensor=None, input_shape=None,
+def RESNET50(include_top=True,
+             weights='vggface',
+             input_tensor=None,
+             input_shape=None,
              pooling=None,
-             classes=8631):
-    input_shape = _obtain_input_shape(input_shape,
-                                      default_size=224,
-                                      min_size=197,
-                                      data_format=K.image_data_format(),
-                                      require_flatten=include_top,
-                                      weights=weights)
+             classes=8631,
+             trainable=True):
+    input_shape = _obtain_input_shape(
+        input_shape,
+        default_size=224,
+        min_size=197,
+        data_format=K.image_data_format(),
+        require_flatten=include_top,
+        weights=weights)
 
     if input_tensor is None:
         img_input = Input(shape=input_shape)
@@ -228,13 +267,18 @@ def RESNET50(include_top=True, weights='vggface',
         bn_axis = 1
 
     x = Conv2D(
-        64, (7, 7), use_bias=False, strides=(2, 2), padding='same',
+        64, (7, 7),
+        use_bias=False,
+        strides=(2, 2),
+        padding='same',
+        trainable=trainable,
         name='conv1/7x7_s2')(img_input)
     x = BatchNormalization(axis=bn_axis, name='conv1/7x7_s2/bn')(x)
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
-    x = resnet_conv_block(x, 3, [64, 64, 256], stage=2, block=1, strides=(1, 1))
+    x = resnet_conv_block(
+        x, 3, [64, 64, 256], stage=2, block=1, strides=(1, 1))
     x = resnet_identity_block(x, 3, [64, 64, 256], stage=2, block=2)
     x = resnet_identity_block(x, 3, [64, 64, 256], stage=2, block=3)
 
@@ -277,13 +321,15 @@ def RESNET50(include_top=True, weights='vggface',
     # load weights
     if weights == 'vggface':
         if include_top:
-            weights_path = get_file('rcmalli_vggface_tf_resnet50.h5',
-                                    utils.RESNET50_WEIGHTS_PATH,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_resnet50.h5',
+                utils.RESNET50_WEIGHTS_PATH,
+                cache_subdir=utils.VGGFACE_DIR)
         else:
-            weights_path = get_file('rcmalli_vggface_tf_notop_resnet50.h5',
-                                    utils.RESNET50_WEIGHTS_PATH_NO_TOP,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_notop_resnet50.h5',
+                utils.RESNET50_WEIGHTS_PATH_NO_TOP,
+                cache_subdir=utils.VGGFACE_DIR)
         model.load_weights(weights_path)
         if K.backend() == 'theano':
             layer_utils.convert_all_kernels_in_model(model)
@@ -291,10 +337,11 @@ def RESNET50(include_top=True, weights='vggface',
                 maxpool = model.get_layer(name='avg_pool')
                 shape = maxpool.output_shape[1:]
                 dense = model.get_layer(name='classifier')
-                layer_utils.convert_dense_weights_data_format(dense, shape,
-                                                              'channels_first')
+                layer_utils.convert_dense_weights_data_format(
+                    dense, shape, 'channels_first')
 
-        if K.image_data_format() == 'channels_first' and K.backend() == 'tensorflow':
+        if K.image_data_format() == 'channels_first' and K.backend(
+        ) == 'tensorflow':
             warnings.warn('You are using the TensorFlow backend, yet you '
                           'are using the Theano '
                           'image data format convention '
@@ -310,21 +357,17 @@ def RESNET50(include_top=True, weights='vggface',
 
 
 def senet_se_block(input_tensor, stage, block, compress_rate=16, bias=False):
-    conv1_down_name = 'conv' + str(stage) + "_" + str(
-        block) + "_1x1_down"
-    conv1_up_name = 'conv' + str(stage) + "_" + str(
-        block) + "_1x1_up"
+    conv1_down_name = 'conv' + str(stage) + "_" + str(block) + "_1x1_down"
+    conv1_up_name = 'conv' + str(stage) + "_" + str(block) + "_1x1_up"
 
     num_channels = int(input_tensor.shape[-1])
     bottle_neck = int(num_channels // compress_rate)
 
     se = GlobalAveragePooling2D()(input_tensor)
     se = Reshape((1, 1, num_channels))(se)
-    se = Conv2D(bottle_neck, (1, 1), use_bias=bias,
-                name=conv1_down_name)(se)
+    se = Conv2D(bottle_neck, (1, 1), use_bias=bias, name=conv1_down_name)(se)
     se = Activation('relu')(se)
-    se = Conv2D(num_channels, (1, 1), use_bias=bias,
-                name=conv1_up_name)(se)
+    se = Conv2D(num_channels, (1, 1), use_bias=bias, name=conv1_up_name)(se)
     se = Activation('sigmoid')(se)
 
     x = input_tensor
@@ -332,8 +375,13 @@ def senet_se_block(input_tensor, stage, block, compress_rate=16, bias=False):
     return x
 
 
-def senet_conv_block(input_tensor, kernel_size, filters,
-                     stage, block, bias=False, strides=(2, 2)):
+def senet_conv_block(input_tensor,
+                     kernel_size,
+                     filters,
+                     stage,
+                     block,
+                     bias=False,
+                     strides=(2, 2)):
     filters1, filters2, filters3 = filters
     if K.image_data_format() == 'channels_last':
         bn_axis = 3
@@ -346,13 +394,17 @@ def senet_conv_block(input_tensor, kernel_size, filters,
     conv1_proj_name = 'conv' + str(stage) + "_" + str(block) + "_1x1_proj"
     conv3_name = 'conv' + str(stage) + "_" + str(block) + "_3x3"
 
-    x = Conv2D(filters1, (1, 1), use_bias=bias, strides=strides,
-               name=conv1_reduce_name)(input_tensor)
+    x = Conv2D(
+        filters1, (1, 1),
+        use_bias=bias,
+        strides=strides,
+        name=conv1_reduce_name)(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=conv1_reduce_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size, padding='same', use_bias=bias,
-               name=conv3_name)(x)
+    x = Conv2D(
+        filters2, kernel_size, padding='same', use_bias=bias,
+        name=conv3_name)(x)
     x = BatchNormalization(axis=bn_axis, name=conv3_name + "/bn")(x)
     x = Activation('relu')(x)
 
@@ -361,18 +413,23 @@ def senet_conv_block(input_tensor, kernel_size, filters,
 
     se = senet_se_block(x, stage=stage, block=block, bias=True)
 
-    shortcut = Conv2D(filters3, (1, 1), use_bias=bias, strides=strides,
-                      name=conv1_proj_name)(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis,
-                                  name=conv1_proj_name + "/bn")(shortcut)
+    shortcut = Conv2D(
+        filters3, (1, 1), use_bias=bias, strides=strides,
+        name=conv1_proj_name)(input_tensor)
+    shortcut = BatchNormalization(
+        axis=bn_axis, name=conv1_proj_name + "/bn")(shortcut)
 
     m = layers.add([se, shortcut])
     m = Activation('relu')(m)
     return m
 
 
-def senet_identity_block(input_tensor, kernel_size,
-                         filters, stage, block, bias=False):
+def senet_identity_block(input_tensor,
+                         kernel_size,
+                         filters,
+                         stage,
+                         block,
+                         bias=False):
     filters1, filters2, filters3 = filters
     if K.image_data_format() == 'channels_last':
         bn_axis = 3
@@ -384,13 +441,14 @@ def senet_identity_block(input_tensor, kernel_size,
         block) + "_1x1_increase"
     conv3_name = 'conv' + str(stage) + "_" + str(block) + "_3x3"
 
-    x = Conv2D(filters1, (1, 1), use_bias=bias,
-               name=conv1_reduce_name)(input_tensor)
+    x = Conv2D(
+        filters1, (1, 1), use_bias=bias, name=conv1_reduce_name)(input_tensor)
     x = BatchNormalization(axis=bn_axis, name=conv1_reduce_name + "/bn")(x)
     x = Activation('relu')(x)
 
-    x = Conv2D(filters2, kernel_size, padding='same', use_bias=bias,
-               name=conv3_name)(x)
+    x = Conv2D(
+        filters2, kernel_size, padding='same', use_bias=bias,
+        name=conv3_name)(x)
     x = BatchNormalization(axis=bn_axis, name=conv3_name + "/bn")(x)
     x = Activation('relu')(x)
 
@@ -405,16 +463,19 @@ def senet_identity_block(input_tensor, kernel_size,
     return m
 
 
-def SENET50(include_top=True, weights='vggface',
-            input_tensor=None, input_shape=None,
+def SENET50(include_top=True,
+            weights='vggface',
+            input_tensor=None,
+            input_shape=None,
             pooling=None,
             classes=8631):
-    input_shape = _obtain_input_shape(input_shape,
-                                      default_size=224,
-                                      min_size=197,
-                                      data_format=K.image_data_format(),
-                                      require_flatten=include_top,
-                                      weights=weights)
+    input_shape = _obtain_input_shape(
+        input_shape,
+        default_size=224,
+        min_size=197,
+        data_format=K.image_data_format(),
+        require_flatten=include_top,
+        weights=weights)
 
     if input_tensor is None:
         img_input = Input(shape=input_shape)
@@ -429,7 +490,10 @@ def SENET50(include_top=True, weights='vggface',
         bn_axis = 1
 
     x = Conv2D(
-        64, (7, 7), use_bias=False, strides=(2, 2), padding='same',
+        64, (7, 7),
+        use_bias=False,
+        strides=(2, 2),
+        padding='same',
         name='conv1/7x7_s2')(img_input)
     x = BatchNormalization(axis=bn_axis, name='conv1/7x7_s2/bn')(x)
     x = Activation('relu')(x)
@@ -478,13 +542,15 @@ def SENET50(include_top=True, weights='vggface',
     # load weights
     if weights == 'vggface':
         if include_top:
-            weights_path = get_file('rcmalli_vggface_tf_senet50.h5',
-                                    utils.SENET50_WEIGHTS_PATH,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_senet50.h5',
+                utils.SENET50_WEIGHTS_PATH,
+                cache_subdir=utils.VGGFACE_DIR)
         else:
-            weights_path = get_file('rcmalli_vggface_tf_notop_senet50.h5',
-                                    utils.SENET50_WEIGHTS_PATH_NO_TOP,
-                                    cache_subdir=utils.VGGFACE_DIR)
+            weights_path = get_file(
+                'rcmalli_vggface_tf_notop_senet50.h5',
+                utils.SENET50_WEIGHTS_PATH_NO_TOP,
+                cache_subdir=utils.VGGFACE_DIR)
         model.load_weights(weights_path)
         if K.backend() == 'theano':
             layer_utils.convert_all_kernels_in_model(model)
@@ -492,10 +558,11 @@ def SENET50(include_top=True, weights='vggface',
                 maxpool = model.get_layer(name='avg_pool')
                 shape = maxpool.output_shape[1:]
                 dense = model.get_layer(name='classifier')
-                layer_utils.convert_dense_weights_data_format(dense, shape,
-                                                              'channels_first')
+                layer_utils.convert_dense_weights_data_format(
+                    dense, shape, 'channels_first')
 
-        if K.image_data_format() == 'channels_first' and K.backend() == 'tensorflow':
+        if K.image_data_format() == 'channels_first' and K.backend(
+        ) == 'tensorflow':
             warnings.warn('You are using the TensorFlow backend, yet you '
                           'are using the Theano '
                           'image data format convention '

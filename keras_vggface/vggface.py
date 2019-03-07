@@ -9,10 +9,14 @@ from __future__ import print_function
 from keras_vggface.models import RESNET50, VGG16, SENET50
 
 
-def VGGFace(include_top=True, model='vgg16', weights='vggface',
-            input_tensor=None, input_shape=None,
+def VGGFace(include_top=True,
+            model='vgg16',
+            weights='vggface',
+            input_tensor=None,
+            input_shape=None,
             pooling=None,
-            classes=None):
+            classes=None,
+            trainable=True):
     """Instantiates the VGGFace architectures.
     Optionally loads weights pre-trained
     on VGGFace datasets. Note that when using TensorFlow,
@@ -53,11 +57,17 @@ def VGGFace(include_top=True, model='vgg16', weights='vggface',
         classes: optional number of classes to classify images
             into, only to be specified if `include_top` is True, and
             if no `weights` argument is specified.
+
+        trainable: Whether the resulting model will be trainable or not. When
+            `include_top` is False and the training will be done for the top
+            most layers only, this can be set to False to get a frozen model.
+
     # Returns
         A Keras model instance.
     # Raises
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
+
     """
 
     if weights not in {'vggface', None}:
@@ -75,11 +85,14 @@ def VGGFace(include_top=True, model='vgg16', weights='vggface',
                 'If using `weights` as vggface original with `include_top`'
                 ' as true, `classes` should be 2622')
 
-        return VGG16(include_top=include_top, input_tensor=input_tensor,
-                     input_shape=input_shape, pooling=pooling,
-                     weights=weights,
-                     classes=classes)
-
+        return VGG16(
+            include_top=include_top,
+            input_tensor=input_tensor,
+            input_shape=input_shape,
+            pooling=pooling,
+            weights=weights,
+            classes=classes,
+            trainable=trainable)
 
     if model == 'resnet50':
 
@@ -91,10 +104,14 @@ def VGGFace(include_top=True, model='vgg16', weights='vggface',
                 'If using `weights` as vggface original with `include_top`'
                 ' as true, `classes` should be 8631')
 
-        return RESNET50(include_top=include_top, input_tensor=input_tensor,
-                        input_shape=input_shape, pooling=pooling,
-                        weights=weights,
-                        classes=classes)
+        return RESNET50(
+            include_top=include_top,
+            input_tensor=input_tensor,
+            input_shape=input_shape,
+            pooling=pooling,
+            weights=weights,
+            classes=classes,
+            trainable=trainable)
 
     if model == 'senet50':
 
@@ -106,7 +123,11 @@ def VGGFace(include_top=True, model='vgg16', weights='vggface',
                 'If using `weights` as vggface original with `include_top`'
                 ' as true, `classes` should be 8631')
 
-        return SENET50(include_top=include_top, input_tensor=input_tensor,
-                        input_shape=input_shape, pooling=pooling,
-                        weights=weights,
-                        classes=classes)
+        return SENET50(
+            include_top=include_top,
+            input_tensor=input_tensor,
+            input_shape=input_shape,
+            pooling=pooling,
+            weights=weights,
+            classes=classes,
+            trainable=trainable)
